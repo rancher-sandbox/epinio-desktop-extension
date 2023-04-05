@@ -1,4 +1,4 @@
-IMAGE?=splatform/epinio-docker-desktop
+IMAGE?=ghcr.io/rancher-sandbox/epinio-desktop-extension
 
 BUILDER=buildx-multi-arch
 
