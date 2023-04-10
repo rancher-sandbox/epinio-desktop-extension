@@ -19,6 +19,12 @@
           },
           {
             "path": "/darwin/kubectl"
+          },
+          {
+            "path": "/darwin/jq"
+          },
+          {
+            "path": "/darwin/epinio-http"
           }
         ],
         "linux": [
@@ -30,6 +36,12 @@
           },
           {
             "path": "/linux/kubectl"
+          },
+          {
+            "path": "/linux/jq"
+          },
+          {
+            "path": "/linux/epinio-http"
           }
         ],
         "windows": [
@@ -41,6 +53,12 @@
           },
           {
             "path": "/windows/kubectl.exe"
+          },
+          {
+            "path": "/windows/jq.exe"
+          },
+          {
+            "path": "/windows/epinio-http.bat"
           }
         ]
       }

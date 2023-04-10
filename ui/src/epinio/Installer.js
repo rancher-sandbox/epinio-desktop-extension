@@ -32,18 +32,35 @@ class EpinioInstaller extends React.Component {
   }
 
   async install() {
+    let installNginx = true;
+
     try {
-      console.log("installing NGINX chart");
-      this.setState({ progress: 10 });
-      let result = await this.helm([
-        "upgrade", "--install", "--atomic", "ingress-nginx",
-        "--create-namespace", "--namespace", "ingress-nginx",
-        "https://github.com/kubernetes/ingress-nginx/releases/download/helm-chart-4.3.0/ingress-nginx-4.3.0.tgz"
-      ]);
-      console.debug(JSON.stringify(result));
-      console.log(result.stdout);
-      // https://github.com/docker/for-mac/issues/4903
-      console.log("installed: you might need to restart docker-desktop if localhost:443 doesn't forward to nginx");
+      const result = await window.ddClient.extension.host.cli.exec(
+        "kubectl", ["get", "service", "-n", "kube-system", "traefik"]
+      );
+      if (result.stdout.length > 0) {
+        installNginx = false;
+      }
+    } catch (error) {
+      // need to install nginx
+    }
+
+    try {
+      let result;
+
+      if (installNginx) {
+        console.log("installing NGINX chart");
+        this.setState({ progress: 10 });
+        result = await this.helm([
+          "upgrade", "--install", "--atomic", "ingress-nginx",
+          "--create-namespace", "--namespace", "ingress-nginx",
+          "https://github.com/kubernetes/ingress-nginx/releases/download/helm-chart-4.3.0/ingress-nginx-4.3.0.tgz"
+        ]);
+        console.debug(JSON.stringify(result));
+        console.log(result.stdout);
+        // https://github.com/docker/for-mac/issues/4903
+        console.log("installed: you might need to restart docker-desktop if localhost:443 doesn't forward to nginx");
+      }
       this.setState({ progress: 25 });
 
       console.log("installing cert-manager chart");
@@ -62,18 +79,26 @@ class EpinioInstaller extends React.Component {
 
       console.log("installing Epinio chart");
       this.setState({ progress: 55 });
-      result = await this.helm([
+      const args = [
         "upgrade", "--install", "epinio",
         "--create-namespace", "--namespace", "epinio",
         "--atomic",
-        "--set", "global.domain=" + this.props.domain,
-        "--set", "ingress.ingressClassName=nginx",
-        "--set", "ingress.nginxSSLRedirect=false",
-        "https://github.com/epinio/helm-charts/releases/download/epinio-1.7.1/epinio-1.7.1.tgz"
-      ]);
+        "--set", "global.domain=" + this.props.domain
+      ];
+      if (installNginx) {
+        args.push("--set", "ingress.ingressClassName=nginx");
+        args.push("--set", "ingress.nginxSSLRedirect=false");
+      }
+      args.push("https://github.com/epinio/helm-charts/releases/download/epinio-1.7.1/epinio-1.7.1.tgz");
+      result = await this.helm(args);
       console.debug(JSON.stringify(result));
       console.log(result.stdout);
       console.log("installed: epinio");
+      if (!installNginx) {
+        this.setState({ progress: 95 });
+        const command = ddClient.host.platform === 'win32' ? 'epinio-http.bat' : 'epinio-http';
+        await window.ddClient.extension.host.cli.exec(command, []);
+      }
       this.setState({ progress: 100 });
       this.props.onInstallationChanged(true);
     } catch (error) {

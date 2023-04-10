@@ -26,6 +26,7 @@ ARG KUBECTL_CHECKSUM_LINUX_AMD64=3f0398d4c8a5ff633e09abd0764ed3b9091fafbe3044970
 ARG KUBECTL_CHECKSUM_WINDOWS_AMD64=2447e0af25842a1b546110e3beb76154998f660cf3d147314d9c7472b983fbcd
 # https://github.com/epinio/epinio/releases
 ARG EPINIO_VERSION=1.7.1
+ARG JQ_VERSION=1.6
 
 # /darwin amd64
 RUN wget -nv https://get.helm.sh/helm-v${HELM_VERSION}-darwin-amd64.tar.gz && \
@@ -40,6 +41,8 @@ RUN wget -nv https://dl.k8s.io/v${KUBECTL_VERSION}/bin/darwin/amd64/kubectl &&\
     chmod +x /darwin/kubectl
 RUN wget -nv https://github.com/epinio/epinio/releases/download/v${EPINIO_VERSION}/epinio-darwin-x86_64 -O /darwin/epinio && \
     chmod +x /darwin/epinio
+RUN wget -nv https://github.com/stedolan/jq/releases/download/jq-${JQ_VERSION}/jq-osx-amd64 -O /darwin/jq && \
+    chmod +x /darwin/jq
 
 # /linux amd64
 RUN wget -nv https://get.helm.sh/helm-v${HELM_VERSION}-linux-amd64.tar.gz && \
@@ -54,6 +57,8 @@ RUN wget -nv https://dl.k8s.io/v${KUBECTL_VERSION}/bin/linux/amd64/kubectl &&\
     chmod +x /linux/kubectl
 RUN wget -nv https://github.com/epinio/epinio/releases/download/v${EPINIO_VERSION}/epinio-linux-x86_64 -O /linux/epinio && \
     chmod +x /linux/epinio
+RUN wget -nv https://github.com/stedolan/jq/releases/download/jq-${JQ_VERSION}/jq-linux64 -O /linux/jq && \
+    chmod +x /linux/jq
 
 # /windows amd64
 RUN wget -nv https://get.helm.sh/helm-v${HELM_VERSION}-windows-amd64.zip && \
@@ -67,6 +72,7 @@ RUN wget -nv https://dl.k8s.io/v${KUBECTL_VERSION}/bin/windows/amd64/kubectl.exe
 RUN wget -nv https://github.com/epinio/epinio/releases/download/v${EPINIO_VERSION}/epinio-windows-x86_64.zip && \
     unzip epinio-windows-x86_64.zip && \
     mv epinio.exe /windows/epinio.exe
+RUN wget -nv https://github.com/stedolan/jq/releases/download/jq-${JQ_VERSION}/jq-win64.exe -O /windows/jq.exe
 
 FROM alpine as downloader-arm64
 RUN apk add --no-cache wget coreutils unzip
@@ -77,6 +83,7 @@ ARG HELM_CHECKSUM_LINUX_ARM64=b0214eabbb64791f563bd222d17150ce39bf4e2f5de49f49fd
 ARG KUBECTL_CHECKSUM_DARWIN_ARM64=f870cabdfd446b5217c1be255168edd99d8f015c974abe01f7b80a4e0ca11b2b
 ARG KUBECTL_CHECKSUM_LINUX_ARM64=aa45dba48791eeb78a994a2723c462d155af4e39fdcfbcb39ce9c96f604a967a
 ARG EPINIO_VERSION=1.7.1
+ARG JQ_VERSION=1.6
 
 # /darwin arm64
 RUN wget -nv https://get.helm.sh/helm-v${HELM_VERSION}-darwin-arm64.tar.gz && \
@@ -91,6 +98,9 @@ RUN wget -nv https://dl.k8s.io/v${KUBECTL_VERSION}/bin/darwin/arm64/kubectl &&\
     chmod +x /darwin/kubectl
 RUN wget -nv https://github.com/epinio/epinio/releases/download/v${EPINIO_VERSION}/epinio-darwin-arm64 -O /darwin/epinio && \
     chmod +x /darwin/epinio
+# No download link for arm64; use amd64 version via Rosetta (Epinio server doesn't work on ARM64 anyways)3
+RUN wget -nv https://github.com/stedolan/jq/releases/download/jq-${JQ_VERSION}/jq-osx-amd64 -O /darwin/jq && \
+    chmod +x /darwin/jq
 
 # /linux arm64
 RUN wget -nv https://get.helm.sh/helm-v${HELM_VERSION}-linux-arm64.tar.gz && \
@@ -124,6 +134,10 @@ COPY --from=downloader /darwin /darwin
 COPY --from=downloader /linux /linux
 # couldn't find helm binary for arm64, so always ship amd64 binaries
 COPY --from=downloader-amd64 /windows /windows
+
+COPY binaries/epinio-http /darwin
+COPY binaries/epinio-http /linux
+COPY binaries/epinio-http.bat /windows
 
 # the extension, UI and such
 COPY metadata.json .
