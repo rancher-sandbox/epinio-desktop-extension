@@ -27,7 +27,7 @@ export function Info(props) {
           (value) => {
             console.log('API.js - Before onInfoChanged()', { value, version: value.version })
 
-            if (value.includes('404')) {
+            if ((typeof value === 'string') && value.includes('404')) {
               throw new Error('404');
             }
 
@@ -39,7 +39,10 @@ export function Info(props) {
             retries++;
             if (retries <= maxRetries) {
               console.log(`API call failed. Retrying (${retries}/${maxRetries})...`);
-              callApi();
+              const interval = setInterval(() => {
+                callApi();
+                clearInterval(interval);
+              }, 3000);
             } else {
               console.log(`API call failed after ${maxRetries} retries`);
               props.onInfoChanged("-");
@@ -53,6 +56,20 @@ export function Info(props) {
   }, [props]);
 
   const icon = infoOK(props.info) ? <CloudIcon /> : <CloudOffIcon />;
+  const callApiAlt = () => {
+    window.ddClient.extension.vm.service.get(apiURL).then(
+      (value) => {
+        console.log('API.js - Before onInfoChanged()', { value, version: value.version })
+        props.onInfoChanged(value.version);
+      }
+    ).catch(
+      (error) => {
+        console.error(error);
+        console.log(`API call failed after ${maxRetries} retries`);
+        props.onInfoChanged("-");
+      }
+    );
+  };
 
   return (
     <Grid container direction="row" alignItems="center" width="30%">
@@ -62,6 +79,7 @@ export function Info(props) {
       <Grid item xs={11}>
         Epinio: { props.info }
       </Grid>
+      <Button onClick={callApiAlt()}>Call API</Button>
     </Grid>
   );
 }
