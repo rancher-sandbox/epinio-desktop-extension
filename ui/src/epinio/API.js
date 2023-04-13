@@ -79,7 +79,7 @@ export function Info(props) {
       <Grid item xs={11}>
         Epinio: { props.info }
       </Grid>
-      <Button onClick={callApiAlt()}>Call API</Button>
+      <Button onClick={callApiAlt}>Call API</Button>
     </Grid>
   );
 }
