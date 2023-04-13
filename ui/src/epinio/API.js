@@ -27,7 +27,7 @@ export function Info(props) {
           (value) => {
             console.log('API.js - Before onInfoChanged()', { value, version: value.version })
 
-            if (value.value.includes('404')) {
+            if (value.includes('404')) {
               throw new Error('404');
             }
 
