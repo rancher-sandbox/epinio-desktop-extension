@@ -37,7 +37,7 @@ export function Info(props) {
           (error) => {
             console.error(error);
             retries++;
-            if (retries <= maxRetries && error.response.status === 404) {
+            if (retries <= maxRetries) {
               console.log(`API call failed. Retrying (${retries}/${maxRetries})...`);
               callApi();
             } else {
