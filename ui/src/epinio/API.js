@@ -6,17 +6,21 @@ import { DataGrid } from '@mui/x-data-grid'
 import { credentialsOK } from './Credentials'
 
 export function infoOK(info) {
+  console.log('API.js - infoOK()', { info })
   return info && info !== "" && info !== "-";
 }
 
 export function Info(props) {
   React.useEffect(() => {
+    console.log('API.js - Info', { props });
     if (props.enabled && credentialsOK(props.credentials)) {
+      console.log('API.js - Info - Enabled and CredentialsOK');
       const creds = props.credentials;
       const apiURL = sprintf("http://%s:%s@%s/api/v1/info", creds.username, creds.password, props.apiDomain);
       console.log("check info api endpoint");
       window.ddClient.extension.vm.service.get(apiURL).then(
         (value) => {
+          console.log('API.js - Before onInfoChanged()', { value, version: value.version })
           props.onInfoChanged(value.version);
         }
       ).catch(

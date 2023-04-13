@@ -57,7 +57,21 @@ function App() {
     window.ddClient.host.openExternal(e.currentTarget.attributes.url.value);
   };
 
-  const disabled = !hasKubernetes || !credentialsOK(credentials) || !infoOK(epinioInfo);
+  const [disabled, setDisabled] = React.useState(!hasKubernetes || !credentialsOK(credentials) || !infoOK(epinioInfo));
+
+  React.useEffect(() => {
+    console.log('DISABLED CHANGED');
+    setDisabled(!hasKubernetes || !credentialsOK(credentials) || !infoOK(epinioInfo));
+    console.log(
+      'SET DISABLED',
+      {
+        kubernetes: !hasKubernetes,
+        credentials: !credentialsOK(credentials),
+        info: !infoOK(epinioInfo)
+      })
+  }, [hasKubernetes, credentials, epinioInfo]);
+
+  console.log('App.js', { disabled });
 
   return (
     <DockerMuiThemeProvider>
