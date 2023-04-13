@@ -17,18 +17,38 @@ export function Info(props) {
       console.log('API.js - Info - Enabled and CredentialsOK');
       const creds = props.credentials;
       const apiURL = sprintf("http://%s:%s@%s/api/v1/info", creds.username, creds.password, props.apiDomain);
-      console.log("check info api endpoint");
-      window.ddClient.extension.vm.service.get(apiURL).then(
-        (value) => {
-          console.log('API.js - Before onInfoChanged()', { value, version: value.version })
-          props.onInfoChanged(value.version);
-        }
-      ).catch(
-        (error) => {
-          console.error(error);
-          props.onInfoChanged("-");
-        }
-      );
+      console.log("check info api endpoint", { username: creds.username, password: creds.password, domain: props.apiDomain, apiURL });
+
+      const maxRetries = 3;
+      let retries = 0;
+
+      const callApi = () => {
+        window.ddClient.extension.vm.service.get(apiURL).then(
+          (value) => {
+            console.log('API.js - Before onInfoChanged()', { value, version: value.version })
+
+            if (value.value.includes('404')) {
+              throw new Error('404');
+            }
+
+            props.onInfoChanged(value.version);
+          }
+        ).catch(
+          (error) => {
+            console.error(error);
+            retries++;
+            if (retries <= maxRetries && error.response.status === 404) {
+              console.log(`API call failed. Retrying (${retries}/${maxRetries})...`);
+              callApi();
+            } else {
+              console.log(`API call failed after ${maxRetries} retries`);
+              props.onInfoChanged("-");
+            }
+          }
+        );
+      };
+
+      callApi();
     }
   }, [props]);
 
