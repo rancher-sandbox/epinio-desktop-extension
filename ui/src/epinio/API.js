@@ -56,20 +56,6 @@ export function Info(props) {
   }, [props]);
 
   const icon = infoOK(props.info) ? <CloudIcon /> : <CloudOffIcon />;
-  const callApiAlt = () => {
-    window.ddClient.extension.vm.service.get(apiURL).then(
-      (value) => {
-        console.log('API.js - Before onInfoChanged()', { value, version: value.version })
-        props.onInfoChanged(value.version);
-      }
-    ).catch(
-      (error) => {
-        console.error(error);
-        console.log(`API call failed after ${maxRetries} retries`);
-        props.onInfoChanged("-");
-      }
-    );
-  };
 
   return (
     <Grid container direction="row" alignItems="center" width="30%">
@@ -79,7 +65,6 @@ export function Info(props) {
       <Grid item xs={11}>
         Epinio: { props.info }
       </Grid>
-      <Button onClick={callApiAlt}>Call API</Button>
     </Grid>
   );
 }
